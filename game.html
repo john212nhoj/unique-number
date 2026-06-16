@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#061428" />
+  <title>Live Room — Smallest Unique Number</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep: #061428;
+      --bg-card: #0c1e3a;
+      --bg-elevated: #122848;
+      --border: rgba(80, 180, 255, 0.15);
+      --text: #e8f4ff;
+      --text-muted: #7a9ec0;
+      --gold: #ffd54a;
+      --gold-glow: rgba(255, 213, 74, 0.4);
+      --cyan: #00e5ff;
+      --cyan-soft: rgba(0, 229, 255, 0.15);
+      --accent: #3b82f6;
+      --live-red: #ff4757;
+      --success: #00d68f;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: "Outfit", system-ui, sans-serif;
+      background: #030a14;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      background: var(--bg-deep);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    @media (min-width: 431px) {
+      body { align-items: center; padding: 12px 0; }
+      .app {
+        height: calc(100dvh - 24px);
+        border-radius: 28px;
+        box-shadow: 0 24px 80px rgba(0,0,0,0.55), 0 0 0 1px var(--border);
+      }
+    }
+
+    /* ── Heatmap bar chart (above timer) ── */
+    .heatmap-panel {
+      flex-shrink: 0;
+      padding: 8px 10px 6px;
+      background: rgba(0, 0, 0, 0.25);
+      border-bottom: 1px solid rgba(0, 229, 255, 0.12);
+    }
+
+    .heatmap-top-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .heatmap-top-head .label {
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    .heatmap-top-head .live-dot {
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--live-red);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .heatmap-top-head .live-dot::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--live-red);
+      border-radius: 50%;
+      animation: blink 1.2s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      height: 52px;
+    }
+
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      min-width: 0;
+    }
+
+    .bar-fill-wrap {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .bar-fill {
+      width: 100%;
+      max-width: 28px;
+      border-radius: 4px 4px 0 0;
+      min-height: 4px;
+      position: relative;
+      transition: height 0.35s ease;
+    }
+
+    .bar-fill span {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.52rem;
+      font-weight: 800;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .bar-range {
+      font-size: 0.48rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-top: 3px;
+      white-space: nowrap;
+    }
+
+    /* ── Top header ── */
+    .top-header {
+      flex-shrink: 0;
+      padding: calc(var(--safe-top) + 8px) 10px 6px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      z-index: 5;
+    }
+
+    .streamer-block {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .streamer-block img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--cyan);
+      box-shadow: 0 0 12px rgba(0,229,255,0.3);
+    }
+
+    .streamer-info .name {
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .focus-btn {
+      margin-top: 3px;
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--success);
+      background: rgba(0,214,143,0.12);
+      border: 1px solid rgba(0,214,143,0.35);
+      border-radius: 4px;
+      padding: 2px 6px;
+      letter-spacing: 0.04em;
+    }
+
+    .onlookers {
+      text-align: right;
+    }
+
+    .onlooker-avatars {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 3px;
+    }
+
+    .onlooker-avatars img {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid var(--bg-deep);
+      margin-left: -6px;
+    }
+
+    .onlooker-avatars img:first-child { margin-left: 0; }
+
+    .onlooker-count {
+      font-size: 0.62rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Action bar */
+    .action-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 10px 6px;
+      overflow-x: auto;
+    }
+
+    .action-bar::-webkit-scrollbar { display: none; }
+
+    .act-btn {
+      flex-shrink: 0;
+      font-family: inherit;
+      font-size: 0.58rem;
+      font-weight: 700;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .act-btn.cheer {
+      background: linear-gradient(90deg, rgba(255,100,50,0.2), rgba(255,200,50,0.15));
+      border-color: rgba(255,180,50,0.3);
+    }
+
+    .act-btn.live-go {
+      background: rgba(0,214,143,0.12);
+      border-color: rgba(0,214,143,0.35);
+      color: var(--success);
+    }
+
+    .act-icon {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+
+    /* ── Streamer window ── */
+    .stream-window {
+      flex-shrink: 0;
+      position: relative;
+      margin: 0 10px 6px;
+      height: 108px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid rgba(0, 229, 255, 0.3);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 0 16px rgba(0, 229, 255, 0.1);
+    }
+
+    .stream-video {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(26, 48, 96, 0.9), rgba(10, 24, 48, 0.95)),
+        url("https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&q=60") center/cover no-repeat;
+    }
+
+    .stream-video::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, rgba(6, 20, 40, 0.85) 0%, transparent 50%, rgba(6, 20, 40, 0.3) 100%);
+    }
+
+    .stream-live-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 71, 87, 0.9);
+      color: #fff;
+      font-size: 0.58rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.06em;
+    }
+
+    .stream-live-badge .dot {
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+
+    .stream-host-center {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .stream-host-center img {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 3px solid var(--gold);
+      box-shadow: 0 0 20px var(--gold-glow);
+      object-fit: cover;
+    }
+
+    .stream-host-center .host-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .stream-host-center .host-status {
+      font-size: 0.55rem;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .stream-viewers-badge {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      z-index: 2;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(4px);
+      font-size: 0.58rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    /* Prize pool float on stream */
+    .prize-float {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 3;
+      width: 96px;
+      background: linear-gradient(160deg, rgba(26, 64, 128, 0.95), rgba(12, 40, 96, 0.95));
+      border: 1px solid rgba(80, 180, 255, 0.4);
+      border-radius: 8px;
+      padding: 12px 6px 6px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ── Main stage ── */
+    .stage {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* removed old stream-bg */
+
+    .prize-float .ribbon {
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, #2563eb, #06b6d4);
+      font-size: 0.48rem;
+      font-weight: 800;
+      padding: 2px 10px;
+      border-radius: 0 0 6px 6px;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .prize-float .coins { font-size: 1.4rem; line-height: 1; margin: 4px 0; }
+
+    .prize-float .pool-label {
+      font-size: 0.48rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .prize-float .pool-val {
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: var(--gold);
+      margin-top: 2px;
+    }
+
+    /* Game machine */
+    .game-machine {
+      flex: 1;
+      min-height: 0;
+      margin: 0 10px;
+      background: linear-gradient(180deg, #0e2850 0%, #081830 40%, #061020 100%);
+      border: 2px solid rgba(0,229,255,0.25);
+      border-radius: 14px 14px 10px 10px;
+      box-shadow:
+        0 0 24px rgba(0,229,255,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .machine-top {
+      flex-shrink: 0;
+      padding: 8px 12px 6px;
+      text-align: center;
+      border-bottom: 1px solid rgba(0,229,255,0.12);
+      background: rgba(0,0,0,0.2);
+    }
+
+    .timer {
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--cyan);
+      text-shadow: 0 0 16px rgba(0,229,255,0.5);
+      letter-spacing: 0.05em;
+    }
+
+    .game-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-top: 2px;
+      letter-spacing: 0.04em;
+    }
+
+    .game-sub {
+      font-size: 0.58rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* Number picker — popup keyboard */
+    .picker-zone {
+      flex-shrink: 0;
+      padding: 8px 8px 6px;
+    }
+
+    .slot-label {
+      text-align: center;
+      font-size: 0.58rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .slots-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .slot {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      border: 2px solid rgba(255,213,74,0.3);
+      background: rgba(0,0,0,0.3);
+      color: var(--gold);
+      text-shadow: 0 0 12px var(--gold-glow);
+      transition: all 0.2s;
+    }
+
+    .slot.empty { color: rgba(255,213,74,0.25); font-size: 1rem; }
+    .slot.locked { border-color: rgba(0,214,143,0.4); background: rgba(0,214,143,0.08); }
+    .slot.active {
+      border-color: var(--cyan);
+      box-shadow: 0 0 16px rgba(0,229,255,0.35);
+      animation: pulse-slot 1.5s infinite;
+    }
+
+    .slot.just-locked { animation: slot-pop 0.35s ease; }
+
+    @keyframes slot-pop {
+      0% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes pulse-slot {
+      0%, 100% { box-shadow: 0 0 16px rgba(0,229,255,0.35); }
+      50% { box-shadow: 0 0 24px rgba(0,229,255,0.55); }
+    }
+
+    .slot-sep { color: var(--text-muted); font-weight: 700; font-size: 0.9rem; }
+
+    .input-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      margin-bottom: 4px;
+      border-radius: 10px;
+      border: 2px solid rgba(0,229,255,0.35);
+      background: rgba(0,0,0,0.35);
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-trigger:active:not(.disabled) {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0,229,255,0.25);
+    }
+
+    .input-trigger.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: rgba(255,255,255,0.08);
+    }
+
+    .input-trigger .icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .input-trigger .input-display {
+      flex: 1;
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--gold);
+      min-height: 1.5rem;
+      letter-spacing: 0.06em;
+    }
+
+    .input-trigger .input-display.placeholder {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0;
+    }
+
+    .input-trigger .input-action {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--cyan);
+      white-space: nowrap;
+    }
+
+    .pick-hint {
+      text-align: center;
+      font-size: 0.55rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+
+    .pick-error {
+      text-align: center;
+      font-size: 0.58rem;
+      color: var(--live-red);
+      margin-top: 3px;
+      min-height: 0.9rem;
+    }
+
+    /* Popup keyboard */
+    .kb-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .kb-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .kb-sheet {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%) translateY(100%);
+      width: 100%;
+      max-width: 430px;
+      background: linear-gradient(180deg, #122848, #0c1e3a);
+      border-top: 2px solid rgba(0,229,255,0.3);
+      border-radius: 16px 16px 0 0;
+      z-index: 201;
+      padding: 12px 12px calc(12px + var(--safe-bottom));
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+    }
+
+    .kb-sheet.open {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .kb-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .kb-head span {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .kb-close {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kb-preview {
+      text-align: center;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,213,74,0.25);
+    }
+
+    .kb-preview .val {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--gold);
+      font-variant-numeric: tabular-nums;
+      min-height: 2.4rem;
+      text-shadow: 0 0 16px var(--gold-glow);
+    }
+
+    .kb-preview .hint {
+      font-size: 0.58rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .kb-preview .hint.err { color: var(--live-red); }
+
+    .kb-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .kb-key {
+      height: 48px;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(145deg, #1d4ed8, #2563eb);
+      box-shadow: 0 3px 0 rgba(0,0,0,0.35);
+      transition: transform 0.08s;
+    }
+
+    .kb-key:active { transform: scale(0.95); }
+
+    .kb-key.green {
+      background: linear-gradient(145deg, #059669, #00d68f);
+    }
+
+    .kb-key.wide {
+      grid-column: span 2;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+    }
+
+    .kb-key.confirm {
+      background: linear-gradient(145deg, #6c5ce7, #8b7cf7);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .kb-key.del {
+      background: linear-gradient(145deg, #374151, #4b5563);
+      font-size: 1rem;
+    }
+
+    /* Road map */
+    .roadmap {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid rgba(0,229,255,0.12);
+      background: rgba(0,0,0,0.25);
+    }
+
+    .roadmap-head {
+      flex-shrink: 0;
+      padding: 5px 10px;
+      font-size: 0.55rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .roadmap-list {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding: 0 8px 6px;
+    }
+
+    .roadmap-list::-webkit-scrollbar { display: none; }
+
+    .road-row {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 6px;
+      align-items: center;
+      padding: 5px 6px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+    }
+
+    .road-round {
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .road-round em {
+      display: block;
+      font-style: normal;
+      font-size: 0.48rem;
+      color: rgba(122, 158, 192, 0.7);
+      font-weight: 600;
+    }
+
+    .road-nums {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .road-nums .icon {
+      font-size: 0.65rem;
+      flex-shrink: 0;
+    }
+
+    .road-nums .n {
+      color: var(--gold);
+      font-variant-numeric: tabular-nums;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .road-nums .n.main {
+      font-size: 0.82rem;
+      text-shadow: 0 0 8px var(--gold-glow);
+    }
+
+    .road-nums .sep { color: var(--text-muted); font-weight: 400; }
+
+    /* Notice bar */
+    .notice-bar {
+      flex-shrink: 0;
+      background: linear-gradient(90deg, #0c2860, #081840);
+      border-top: 1px solid var(--border);
+      padding: 5px 12px;
+      font-size: 0.58rem;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.3;
+      text-align: center;
+    }
+
+    /* Chat bar (bottom) */
+    .chat-bar {
+      flex-shrink: 0;
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      padding-bottom: calc(8px + var(--safe-bottom));
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--border);
+    }
+
+    .chat-bar input {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 9px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .chat-bar input:focus { border-color: #8b7cf7; }
+
+    .chat-bar input::placeholder { color: var(--text-muted); }
+
+    .chat-bar button {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #6c5ce7, #8b7cf7);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(108, 92, 231, 0.4);
+    }
+
+    .chat-bar button:active { transform: scale(0.93); }
+
+    .chat-toast {
+      position: fixed;
+      bottom: calc(60px + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(108, 92, 231, 0.92);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 99;
+      max-width: 90%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="top-header">
+      <div class="streamer-block">
+        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nickname04&backgroundColor=ffd54a" alt="" />
+        <div class="streamer-info">
+          <div class="name">Nickname04</div>
+          <div class="focus-btn">★ FOCUS ON</div>
+        </div>
+      </div>
+      <div class="onlookers">
+        <div class="onlooker-avatars">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=o1" alt="" />
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=o2" alt="" />
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=o3" alt="" />
+        </div>
+        <div class="onlooker-count">ONLOOKER: 234</div>
+      </div>
+    </header>
+
+    <div class="action-bar">
+      <button class="act-btn cheer" type="button">🔥 CHEER FOR THE STREAMER</button>
+      <div class="act-icon">🎁</div>
+      <div class="act-icon">💎</div>
+      <button class="act-btn live-go" type="button">▶ ONE-CLICK LIVE</button>
+      <div class="act-icon">⚙️</div>
+    </div>
+
+    <div class="stage">
+      <!-- Streamer video window -->
+      <div class="stream-window">
+        <div class="stream-video"></div>
+        <div class="stream-live-badge"><span class="dot"></span> LIVE</div>
+        <div class="stream-viewers-badge">👁 1,284 watching</div>
+        <div class="stream-host-center">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=GameHost&backgroundColor=ffd54a" alt="Streamer" />
+          <span class="host-name">Nickname04</span>
+          <span class="host-status">Playing · Smallest Unique Number</span>
+        </div>
+        <div class="prize-float">
+          <div class="ribbon">LEADERBOARD</div>
+          <div class="coins">🪙</div>
+          <div class="pool-label">Reward Pool</div>
+          <div class="pool-val">50,000 Coins</div>
+        </div>
+      </div>
+
+      <div class="game-machine">
+        <div class="heatmap-panel">
+          <div class="heatmap-top-head">
+            <span class="label">Live Distribution</span>
+            <span class="live-dot">Updating live</span>
+          </div>
+          <div class="bar-chart" id="heatmap"></div>
+        </div>
+
+        <div class="machine-top">
+          <div class="timer" id="timer">12:00</div>
+          <div class="game-title">Smallest Unique Number</div>
+          <div class="game-sub">Round #2847 · Pick 3 numbers (1–50)</div>
+        </div>
+
+        <div class="picker-zone">
+          <div class="slot-label" id="slotLabel">Enter number · 1 of 3</div>
+          <div class="slots-display">
+            <div class="slot empty" id="slot0">—</div>
+            <span class="slot-sep">·</span>
+            <div class="slot empty" id="slot1">—</div>
+            <span class="slot-sep">·</span>
+            <div class="slot empty" id="slot2">—</div>
+          </div>
+
+          <div class="input-trigger" id="inputTrigger" role="button" tabindex="0">
+            <span class="icon">⌨️</span>
+            <span class="input-display placeholder" id="inputDisplay">Tap to enter number (1–50)</span>
+            <span class="input-action" id="inputAction">OPEN</span>
+          </div>
+          <div class="pick-error" id="pickError"></div>
+          <div class="pick-hint">Manual input · Final once submitted · <a href="index.html" style="color:var(--cyan);text-decoration:none">Results →</a></div>
+        </div>
+
+        <div class="roadmap">
+          <div class="roadmap-head">
+            <span>Road Map · Past Draws</span>
+            <span id="roadCount">0 rounds</span>
+          </div>
+          <div class="roadmap-list" id="roadmap"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notice-bar">
+      Numbers cannot be changed after submission. Refund available if you leave after submitting.
+    </div>
+
+    <div class="chat-bar">
+      <input type="text" id="chatInput" placeholder="Say something..." maxlength="500" autocomplete="off" enterkeyhint="send" />
+      <button type="button" id="sendBtn" aria-label="Send">➤</button>
+    </div>
+
+    <div class="chat-toast" id="chatToast"></div>
+
+    <!-- Popup numeric keyboard -->
+    <div class="kb-overlay" id="kbOverlay"></div>
+    <div class="kb-sheet" id="kbSheet">
+      <div class="kb-head">
+        <span id="kbTitle">Number 1 of 3</span>
+        <button type="button" class="kb-close" id="kbClose" aria-label="Close">×</button>
+      </div>
+      <div class="kb-preview">
+        <div class="val" id="kbPreview">—</div>
+        <div class="hint" id="kbHint">Enter a number from 1 to 50</div>
+      </div>
+      <div class="kb-grid" id="kbGrid"></div>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    const ME = {
+      id: "me",
+      name: "Nickname04",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=You&backgroundColor=6c5ce7",
+    };
+
+    let activeSlot = 0;
+    let kbBuffer = "";
+
+    const slotEls = [document.getElementById("slot0"), document.getElementById("slot1"), document.getElementById("slot2")];
+    const slotLabel = document.getElementById("slotLabel");
+    const inputTrigger = document.getElementById("inputTrigger");
+    const inputDisplay = document.getElementById("inputDisplay");
+    const inputAction = document.getElementById("inputAction");
+    const pickError = document.getElementById("pickError");
+    const heatmapEl = document.getElementById("heatmap");
+    const roadmapEl = document.getElementById("roadmap");
+    const roadCount = document.getElementById("roadCount");
+    const chatInput = document.getElementById("chatInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const chatToast = document.getElementById("chatToast");
+    const kbOverlay = document.getElementById("kbOverlay");
+    const kbSheet = document.getElementById("kbSheet");
+    const kbClose = document.getElementById("kbClose");
+    const kbTitle = document.getElementById("kbTitle");
+    const kbPreview = document.getElementById("kbPreview");
+    const kbHint = document.getElementById("kbHint");
+    const kbGrid = document.getElementById("kbGrid");
+
+    const KEY_LAYOUT = [
+      ["1", "2", "3"],
+      ["4", "5", "6"],
+      ["7", "8", "9"],
+      ["⌫", "0", "✓"],
+    ];
+
+    KEY_LAYOUT.flat().forEach((key) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "kb-key";
+      btn.textContent = key;
+      if (key === "✓") {
+        btn.classList.add("confirm");
+        btn.addEventListener("click", confirmKeyboard);
+      } else if (key === "⌫") {
+        btn.classList.add("del");
+        btn.addEventListener("click", () => { kbBuffer = kbBuffer.slice(0, -1); syncKeyboard(); });
+      } else {
+        if (["2", "4", "6", "8", "0"].includes(key)) btn.classList.add("green");
+        btn.addEventListener("click", () => appendDigit(key));
+      }
+      kbGrid.appendChild(btn);
+    });
+
+    function getActiveSlot(entry) {
+      return entry.locked.findIndex((l) => !l);
+    }
+
+    function appendDigit(d) {
+      if (kbBuffer.length >= 2) return;
+      if (kbBuffer === "" && d === "0") return;
+      kbBuffer += d;
+      syncKeyboard();
+    }
+
+    function syncKeyboard() {
+      kbPreview.textContent = kbBuffer || "—";
+      const num = parseInt(kbBuffer, 10);
+      if (!kbBuffer) {
+        kbHint.textContent = "Enter a number from 1 to 50";
+        kbHint.classList.remove("err");
+      } else if (num > 50) {
+        kbHint.textContent = "Maximum is 50";
+        kbHint.classList.add("err");
+      } else if (num < 1) {
+        kbHint.textContent = "Minimum is 1";
+        kbHint.classList.add("err");
+      } else {
+        const { entry } = LuckyDraw.getPlayerStatus(ME.id);
+        if (entry.numbers.includes(num)) {
+          kbHint.textContent = "Already used — pick another";
+          kbHint.classList.add("err");
+        } else {
+          kbHint.textContent = "Tap ✓ to submit";
+          kbHint.classList.remove("err");
+        }
+      }
+    }
+
+    function openKeyboard() {
+      const { entry } = LuckyDraw.getPlayerStatus(ME.id);
+      const slot = getActiveSlot(entry);
+      if (slot === -1) return;
+      activeSlot = slot;
+      kbBuffer = "";
+      kbTitle.textContent = `Number ${slot + 1} of 3`;
+      syncKeyboard();
+      kbOverlay.classList.add("open");
+      kbSheet.classList.add("open");
+    }
+
+    function closeKeyboard() {
+      kbOverlay.classList.remove("open");
+      kbSheet.classList.remove("open");
+      kbBuffer = "";
+    }
+
+    function confirmKeyboard() {
+      const num = parseInt(kbBuffer, 10);
+      if (!kbBuffer || num < 1 || num > 50) {
+        kbHint.textContent = "Enter a valid number (1–50)";
+        kbHint.classList.add("err");
+        return;
+      }
+      const { entry } = LuckyDraw.getPlayerStatus(ME.id);
+      const slot = getActiveSlot(entry);
+      if (slot === -1) { closeKeyboard(); return; }
+      if (entry.numbers.includes(num)) {
+        kbHint.textContent = "Already used — pick another";
+        kbHint.classList.add("err");
+        return;
+      }
+
+      const result = LuckyDraw.submitPlayerNumber(ME.id, ME.name, ME.avatar, slot, num);
+      if (!result.ok) return;
+
+      closeKeyboard();
+      pickError.textContent = "";
+      slotEls[slot].classList.add("just-locked");
+      setTimeout(() => slotEls[slot].classList.remove("just-locked"), 350);
+      renderUI();
+
+      if (!result.allDone) {
+        setTimeout(openKeyboard, 280);
+      }
+    }
+
+    inputTrigger.addEventListener("click", () => {
+      if (!inputTrigger.classList.contains("disabled")) openKeyboard();
+    });
+    inputTrigger.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !inputTrigger.classList.contains("disabled")) openKeyboard();
+    });
+    kbOverlay.addEventListener("click", closeKeyboard);
+    kbClose.addEventListener("click", closeKeyboard);
+
+    function renderHeatmap(data) {
+      heatmapEl.innerHTML = "";
+      const maxPct = Math.max(...data.map((d) => d.pct), 1);
+      data.forEach(({ range, pct, color }) => {
+        const col = document.createElement("div");
+        col.className = "bar-col";
+        const h = Math.max(8, Math.round((pct / maxPct) * 100));
+        col.innerHTML = `
+          <div class="bar-fill-wrap">
+            <div class="bar-fill" style="height:${h}%;background:${color}">
+              <span>${pct}%</span>
+            </div>
+          </div>
+          <span class="bar-range">${range}</span>`;
+        heatmapEl.appendChild(col);
+      });
+    }
+
+    function renderRoadmap(state) {
+      roadmapEl.innerHTML = "";
+      const history = state.drawHistory || [];
+      roadCount.textContent = history.length + " rounds";
+      history.forEach((rec) => {
+        const row = document.createElement("div");
+        row.className = "road-row";
+        const nums = rec.numbers.map((n, i) =>
+          `<span class="n${i === 0 ? " main" : ""}">${n}</span>${i < rec.numbers.length - 1 ? '<span class="sep">|</span>' : ""}`
+        ).join("");
+        row.innerHTML = `
+          <div class="road-round">#${rec.roundId}<em>Draw</em></div>
+          <div class="road-nums">
+            <span class="icon">💎</span>
+            ${nums}
+          </div>`;
+        roadmapEl.appendChild(row);
+      });
+    }
+
+    function renderUI() {
+      const { entry, heatmap, state } = LuckyDraw.getPlayerStatus(ME.id);
+      activeSlot = getActiveSlot(entry);
+      const allDone = activeSlot === -1;
+
+      slotEls.forEach((el, i) => {
+        el.className = "slot";
+        if (entry.numbers[i] !== null) {
+          el.textContent = entry.numbers[i];
+          el.classList.add("locked");
+        } else {
+          el.textContent = "—";
+          el.classList.add("empty");
+        }
+        if (i === activeSlot && !allDone) el.classList.add("active");
+      });
+
+      if (allDone) {
+        slotLabel.textContent = "All 3 numbers submitted ✓";
+        inputTrigger.classList.add("disabled");
+        inputDisplay.textContent = "Entry complete";
+        inputDisplay.classList.add("placeholder");
+        inputAction.textContent = "DONE";
+      } else {
+        slotLabel.textContent = `Enter number · ${activeSlot + 1} of 3`;
+        inputTrigger.classList.remove("disabled");
+        inputDisplay.textContent = "Tap to enter number (1–50)";
+        inputDisplay.classList.add("placeholder");
+        inputAction.textContent = "OPEN";
+      }
+
+      renderHeatmap(heatmap);
+      renderRoadmap(state);
+    }
+
+    let toastTimer;
+    function showChatToast(text) {
+      chatToast.textContent = text;
+      chatToast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => chatToast.classList.remove("show"), 2200);
+    }
+
+    function sendChat() {
+      const t = chatInput.value.trim();
+      if (!t) return;
+      showChatToast("You: " + t);
+      chatInput.value = "";
+    }
+
+    sendBtn.addEventListener("click", sendChat);
+    chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendChat(); });
+
+    /* Countdown — redirect to draw when time's up */
+    let seconds = 12 * 60;
+    let drawTriggered = false;
+    const timerEl = document.getElementById("timer");
+
+    function tryGoToDraw() {
+      if (drawTriggered) return;
+      const { entry } = LuckyDraw.getPlayerStatus(ME.id);
+      const allDone = entry.locked.every(Boolean);
+      if (!allDone) {
+        timerEl.textContent = "00:00";
+        timerEl.style.color = "var(--live-red)";
+        pickError.textContent = "Time's up — complete all 3 numbers next round";
+        return;
+      }
+      drawTriggered = true;
+      closeKeyboard();
+      window.location.href = "draw.html";
+    }
+
+    setInterval(() => {
+      if (seconds <= 0) {
+        tryGoToDraw();
+        return;
+      }
+      seconds--;
+      const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+      const s = String(seconds % 60).padStart(2, "0");
+      timerEl.textContent = m + ":" + s;
+      if (seconds <= 10) timerEl.style.color = "var(--live-red)";
+    }, 1000);
+
+    renderUI();
+  </script>
+</body>
+</html>
