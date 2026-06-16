@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#061428" />
+  <title>Live Draw — Round #2847</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep: #061428;
+      --bg-card: #0c1e3a;
+      --bg-elevated: #122848;
+      --border: rgba(80, 180, 255, 0.15);
+      --text: #e8f4ff;
+      --text-muted: #7a9ec0;
+      --gold: #ffd54a;
+      --gold-glow: rgba(255, 213, 74, 0.5);
+      --silver: #c0c8d8;
+      --bronze: #cd7f4a;
+      --cyan: #00e5ff;
+      --live-red: #ff4757;
+      --success: #00d68f;
+      --accent: #6c5ce7;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: "Outfit", system-ui, sans-serif;
+      background: #030a14;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      background: var(--bg-deep);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    @media (min-width: 431px) {
+      body { align-items: center; padding: 12px 0; }
+      .app {
+        height: calc(100dvh - 24px);
+        border-radius: 28px;
+        box-shadow: 0 24px 80px rgba(0,0,0,0.55), 0 0 0 1px var(--border);
+      }
+    }
+
+    .confetti {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 20;
+    }
+
+    .confetti span {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 1px;
+      animation: fall 1.2s ease-out forwards;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    .top-bar {
+      flex-shrink: 0;
+      padding: calc(var(--safe-top) + 8px) 12px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 1;
+    }
+
+    .live-tag {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--live-red);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+
+    .live-tag .dot {
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .round-info { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
+
+    .prize-row {
+      flex-shrink: 0;
+      margin: 0 12px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, rgba(255,213,74,0.1), transparent);
+      border: 1px solid rgba(255,213,74,0.22);
+      border-radius: 8px;
+      padding: 6px 10px;
+    }
+
+    .prize-row .label {
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .prize-row .val { font-size: 0.95rem; font-weight: 800; color: var(--gold); }
+
+    .status-text {
+      flex-shrink: 0;
+      text-align: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0 12px 6px;
+      min-height: 1.1rem;
+    }
+
+    .status-text.done { color: var(--gold); }
+
+    /* 50-number grid */
+    .grid-wrap {
+      flex-shrink: 0;
+      margin: 0 12px 6px;
+      padding: 8px;
+      background: linear-gradient(180deg, #0e2850, #061020);
+      border: 2px solid rgba(0,229,255,0.3);
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,229,255,0.1);
+    }
+
+    .grid-title {
+      text-align: center;
+      font-size: 0.58rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 6px;
+      letter-spacing: 0.06em;
+    }
+
+    .num-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 3px;
+    }
+
+    .num-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 4px;
+      color: var(--text-muted);
+      transition: transform 0.08s, background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    }
+
+    .num-cell.active {
+      background: rgba(0,229,255,0.25);
+      border-color: var(--cyan);
+      color: #fff;
+      transform: scale(1.15);
+      box-shadow: 0 0 12px rgba(0,229,255,0.6);
+      z-index: 2;
+    }
+
+    .num-cell.won-1 {
+      background: rgba(255,213,74,0.25);
+      border-color: var(--gold);
+      color: var(--gold);
+      box-shadow: 0 0 10px var(--gold-glow);
+      transform: scale(1.05);
+    }
+
+    .num-cell.won-2 {
+      background: rgba(192,200,216,0.15);
+      border-color: var(--silver);
+      color: var(--silver);
+    }
+
+    .num-cell.won-3 {
+      background: rgba(205,127,74,0.15);
+      border-color: var(--bronze);
+      color: var(--bronze);
+    }
+
+    .num-cell.won-other {
+      background: rgba(108,92,231,0.2);
+      border-color: rgba(108,92,231,0.5);
+      color: #a29bfe;
+    }
+
+    .num-cell .rank-tag {
+      display: none;
+      position: absolute;
+      font-size: 0.4rem;
+      top: -1px;
+      right: -1px;
+    }
+
+    .num-cell { position: relative; }
+
+    .num-cell[class*="won"]::after {
+      content: attr(data-rank);
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      font-size: 0.42rem;
+      background: rgba(0,0,0,0.8);
+      border-radius: 3px;
+      padding: 0 2px;
+      line-height: 1.2;
+    }
+
+    /* Winners reveal list */
+    .winners-panel {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      margin: 0 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .winners-head {
+      flex-shrink: 0;
+      padding: 5px 10px;
+      font-size: 0.55rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+
+    .winners-list {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 6px;
+    }
+
+    .winners-list::-webkit-scrollbar { display: none; }
+
+    .winner-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 5px;
+      animation: slide-in 0.45s cubic-bezier(0.34, 1.2, 0.64, 1);
+      opacity: 0;
+      animation-fill-mode: forwards;
+    }
+
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .winner-card.r1 { border-color: rgba(255,213,74,0.35); background: rgba(255,213,74,0.06); }
+    .winner-card.r2 { border-color: rgba(192,200,216,0.25); }
+    .winner-card.r3 { border-color: rgba(205,127,74,0.3); }
+
+    .wc-top {
+      display: grid;
+      grid-template-columns: 1.4fr 0.55fr 1fr 0.5fr;
+      gap: 4px;
+      align-items: center;
+      font-size: 0.65rem;
+    }
+
+    .wc-head-row {
+      display: grid;
+      grid-template-columns: 1.4fr 0.55fr 1fr 0.5fr;
+      gap: 4px;
+      font-size: 0.48rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+      padding: 0 2px;
+    }
+
+    .wc-player {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .wc-player img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 1.5px solid var(--border);
+      object-fit: cover;
+    }
+
+    .winner-card.r1 .wc-player img {
+      width: 30px;
+      height: 30px;
+      border-color: var(--gold);
+      box-shadow: 0 0 10px var(--gold-glow);
+    }
+
+    .wc-player .info { min-width: 0; }
+
+    .wc-player .name {
+      font-weight: 700;
+      font-size: 0.68rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .winner-card.r1 .name { color: var(--gold); font-size: 0.75rem; }
+
+    .wc-player .rank {
+      font-size: 0.52rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .winner-card.r1 .rank { color: var(--gold); }
+    .winner-card.r2 .rank { color: var(--silver); }
+    .winner-card.r3 .rank { color: var(--bronze); }
+
+    .wc-num { font-weight: 800; color: var(--accent); text-align: center; }
+    .wc-bonus { font-weight: 600; color: var(--success); font-size: 0.58rem; }
+    .wc-pct { font-weight: 600; color: var(--text-muted); font-size: 0.58rem; text-align: center; }
+
+    .wc-group-players {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .wc-gp-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.62rem;
+    }
+
+    .wc-gp-row img { width: 20px; height: 20px; border-radius: 50%; }
+
+    .wc-nums-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .wc-num-chip {
+      background: rgba(108,92,231,0.2);
+      color: #a29bfe;
+      font-weight: 700;
+      font-size: 0.65rem;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    .bottom-note {
+      flex-shrink: 0;
+      text-align: center;
+      padding: 6px 12px;
+      padding-bottom: calc(6px + var(--safe-bottom));
+      font-size: 0.58rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="confetti" id="confetti"></div>
+
+    <div class="top-bar">
+      <div class="live-tag"><span class="dot"></span> LIVE DRAW</div>
+      <div class="round-info">Round #2847</div>
+    </div>
+
+    <div class="prize-row">
+      <span class="label">Prize Pool</span>
+      <span class="val">50,000 Coins</span>
+    </div>
+
+    <div class="status-text" id="statusText">Drawing in progress...</div>
+
+    <div class="grid-wrap">
+      <div class="grid-title">Smallest Unique Number · 1 – 50</div>
+      <div class="num-grid" id="numGrid"></div>
+    </div>
+
+    <div class="winners-panel">
+      <div class="winners-head">🏆 Winner Leaderboard</div>
+      <div class="winners-list" id="winnersList">
+        <div class="wc-head-row">
+          <span>Rank</span><span>No.</span><span>Bonus</span><span>%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-note" id="bottomNote">Selecting winning numbers...</div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    const WINNERS = [
+      {
+        type: "single", rankClass: "r1", medal: "🥇", rank: "1st",
+        name: "ShadowKing", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ShadowKing&backgroundColor=f5c842",
+        numbers: [3], bonus: "20,000 Coins", pct: "40%", winClass: "won-1", rankTag: "🥇",
+      },
+      {
+        type: "single", rankClass: "r2", medal: "🥈", rank: "2nd",
+        name: "LunaStar", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=LunaStar&backgroundColor=c0c8d8",
+        numbers: [6], bonus: "10,000 Coins", pct: "20%", winClass: "won-2", rankTag: "🥈",
+      },
+      {
+        type: "single", rankClass: "r3", medal: "🥉", rank: "3rd",
+        name: "NeonPulse", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=NeonPulse&backgroundColor=cd7f4a",
+        numbers: [9], bonus: "5,000 Coins", pct: "10%", winClass: "won-3", rankTag: "🥉",
+      },
+      {
+        type: "group", rankClass: "", rank: "4th – 6th",
+        numbers: [14, 17, 22], bonus: "2,500 Coins each", pct: "5% each", winClass: "won-other", rankTag: "4-6",
+        players: [
+          { name: "PixelFox", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=PixelFox", number: 14 },
+          { name: "StormRider", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=StormRider", number: 17 },
+          { name: "CyberWolf", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=CyberWolf", number: 22 },
+        ],
+      },
+      {
+        type: "group", rankClass: "", rank: "7th – 10th",
+        numbers: [28, 33, 39, 45], bonus: "1,250 Coins each", pct: "2.5% each", winClass: "won-other", rankTag: "7-10",
+        players: [
+          { name: "BlazeKnight", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=BlazeKnight", number: 28 },
+          { name: "FrostMage", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=FrostMage", number: 33 },
+          { name: "ThunderBolt", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ThunderBolt", number: 39 },
+          { name: "StarDust", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=StarDust", number: 45 },
+        ],
+      },
+    ];
+
+    const ALL_WINNING = WINNERS.flatMap((w) => w.numbers);
+    const statusText = document.getElementById("statusText");
+    const bottomNote = document.getElementById("bottomNote");
+    const numGrid = document.getElementById("numGrid");
+    const winnersList = document.getElementById("winnersList");
+    const confettiEl = document.getElementById("confetti");
+
+    const cells = {};
+
+    for (let n = 1; n <= 50; n++) {
+      const el = document.createElement("div");
+      el.className = "num-cell";
+      el.textContent = n;
+      el.dataset.num = n;
+      numGrid.appendChild(el);
+      cells[n] = el;
+    }
+
+    function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+    let activeCell = null;
+
+    function setActive(num) {
+      if (activeCell) activeCell.classList.remove("active");
+      activeCell = cells[num];
+      if (activeCell && !activeCell.className.includes("won")) {
+        activeCell.classList.add("active");
+      }
+    }
+
+    function clearActive() {
+      if (activeCell) activeCell.classList.remove("active");
+      activeCell = null;
+    }
+
+    function lockNumbers(nums, winClass, rankTag) {
+      nums.forEach((n) => {
+        const c = cells[n];
+        c.classList.remove("active");
+        c.classList.add(winClass);
+        c.dataset.rank = rankTag;
+      });
+    }
+
+    function renderSingleCard(w) {
+      const card = document.createElement("div");
+      card.className = `winner-card ${w.rankClass}`;
+      card.innerHTML = `
+        <div class="wc-top">
+          <div class="wc-player">
+            <img src="${w.avatar}" alt="" />
+            <div class="info">
+              <div class="name">${w.name}</div>
+              <div class="rank">${w.medal} ${w.rank} Place</div>
+            </div>
+          </div>
+          <div class="wc-num">${w.numbers[0]}</div>
+          <div class="wc-bonus">${w.bonus}</div>
+          <div class="wc-pct">${w.pct}</div>
+        </div>`;
+      winnersList.appendChild(card);
+      card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function renderGroupCard(w) {
+      const card = document.createElement("div");
+      card.className = "winner-card";
+      const chips = w.numbers.map((n) => `<span class="wc-num-chip">${n}</span>`).join("");
+      const players = w.players.map((p) =>
+        `<div class="wc-gp-row"><img src="${p.avatar}" alt="" /><span>${p.name} · #${p.number}</span></div>`
+      ).join("");
+      card.innerHTML = `
+        <div class="wc-top">
+          <div class="wc-player">
+            <div class="info">
+              <div class="name">${w.rank}</div>
+              <div class="rank">Group Winners</div>
+            </div>
+          </div>
+          <div class="wc-num" style="font-size:0.55rem">${w.numbers.join("/")}</div>
+          <div class="wc-bonus">${w.bonus}</div>
+          <div class="wc-pct">${w.pct}</div>
+        </div>
+        <div class="wc-nums-row">${chips}</div>
+        <div class="wc-group-players">${players}</div>`;
+      winnersList.appendChild(card);
+      card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function burstConfetti() {
+      const colors = ["#ffd54a", "#00e5ff", "#00d68f", "#6c5ce7", "#ff4757"];
+      for (let i = 0; i < 50; i++) {
+        const s = document.createElement("span");
+        s.style.left = Math.random() * 100 + "%";
+        s.style.background = colors[i % colors.length];
+        s.style.animationDelay = Math.random() * 0.5 + "s";
+        confettiEl.appendChild(s);
+        setTimeout(() => s.remove(), 2000);
+      }
+    }
+
+    /** Flatten winners into individual numbers, largest → smallest. */
+    function buildRevealSequence() {
+      const items = [];
+      WINNERS.forEach((w) => {
+        w.numbers.forEach((n) => {
+          items.push({
+            number: n,
+            winner: w,
+            winClass: w.winClass,
+            rankTag: w.rankTag,
+          });
+        });
+      });
+      items.sort((a, b) => b.number - a.number);
+      return items;
+    }
+
+    const revealedCount = new Map();
+
+    function maybeRenderWinnerCard(w) {
+      const count = revealedCount.get(w) || 0;
+      if (w.type === "single" && count >= 1) {
+        renderSingleCard(w);
+      } else if (w.type === "group" && count >= w.numbers.length) {
+        renderGroupCard(w);
+      }
+    }
+
+    async function revealNumber(item) {
+      const { number, winner: w, winClass, rankTag } = item;
+
+      if (w.type === "single") {
+        statusText.textContent = `Revealing ${w.medal} ${w.rank} Place...`;
+        bottomNote.textContent = `${w.rank} place · #${number}`;
+      } else {
+        statusText.textContent = `Revealing #${number}...`;
+        bottomNote.textContent = `${w.rank} · winning number ${number}`;
+      }
+
+      setActive(number);
+      await sleep(450);
+      lockNumbers([number], winClass, rankTag);
+      clearActive();
+
+      revealedCount.set(w, (revealedCount.get(w) || 0) + 1);
+      maybeRenderWinnerCard(w);
+
+      await sleep(500);
+    }
+
+    async function runDraw() {
+      const state = LuckyDraw.loadState();
+
+      statusText.textContent = "Revealing winners...";
+      bottomNote.textContent = "From highest number to lowest";
+
+      await sleep(400);
+
+      const sequence = buildRevealSequence();
+      for (const item of sequence) {
+        await revealNumber(item);
+      }
+
+      statusText.textContent = "Draw Complete!";
+      statusText.classList.add("done");
+      bottomNote.textContent = "Checking your result...";
+      burstConfetti();
+
+      LuckyDraw.recordDrawResult(
+        WINNERS.flatMap((w) => w.numbers),
+        state.roundId
+      );
+
+      await sleep(3500);
+      window.location.href = "outcome.html";
+    }
+
+    runDraw();
+  </script>
+</body>
+</html>

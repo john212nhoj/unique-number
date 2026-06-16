@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#061428" />
+  <title>Your Result — Round #2847</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep: #061428;
+      --bg-card: #0c1e3a;
+      --bg-elevated: #122848;
+      --border: rgba(80, 180, 255, 0.15);
+      --text: #e8f4ff;
+      --text-muted: #7a9ec0;
+      --gold: #ffd54a;
+      --gold-glow: rgba(255, 213, 74, 0.5);
+      --cyan: #00e5ff;
+      --success: #00d68f;
+      --accent: #6c5ce7;
+      --live-red: #ff4757;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: "Outfit", system-ui, sans-serif;
+      background: #030a14;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      background: var(--bg-deep);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    @media (min-width: 431px) {
+      body { align-items: center; padding: 12px 0; }
+      .app {
+        height: calc(100dvh - 24px);
+        border-radius: 28px;
+        box-shadow: 0 24px 80px rgba(0,0,0,0.55), 0 0 0 1px var(--border);
+      }
+    }
+
+    .app.win-bg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 35%, rgba(255,213,74,0.18), transparent 55%);
+      pointer-events: none;
+    }
+
+    .app.lose-bg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 35%, rgba(108,92,231,0.12), transparent 55%);
+      pointer-events: none;
+    }
+
+    .confetti {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .confetti span {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      border-radius: 1px;
+      animation: fall 1.4s ease-out forwards;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    .top-bar {
+      flex-shrink: 0;
+      padding: calc(var(--safe-top) + 10px) 14px 8px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .round-tag {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .main {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 20px;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .hero-icon {
+      font-size: 4.5rem;
+      line-height: 1;
+      margin-bottom: 12px;
+      animation: bounce-in 0.7s cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+
+    @keyframes bounce-in {
+      0% { transform: scale(0.3); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .hero-icon.win { filter: drop-shadow(0 0 24px var(--gold-glow)); }
+
+    h1 {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    h1.win {
+      background: linear-gradient(135deg, #fff 20%, var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    h1.lose { color: var(--text); }
+
+    .subtitle {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+      max-width: 300px;
+      margin-bottom: 20px;
+    }
+
+    .subtitle strong { color: var(--cyan); font-weight: 600; }
+
+    .card {
+      width: 100%;
+      max-width: 320px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .card.win-card {
+      border-color: rgba(255,213,74,0.35);
+      background: linear-gradient(160deg, rgba(255,213,74,0.08), var(--bg-card));
+    }
+
+    .card-label {
+      font-size: 0.55rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .your-nums {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+
+    .num-chip {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      background: rgba(108,92,231,0.15);
+      border: 1px solid rgba(108,92,231,0.35);
+      color: #a29bfe;
+    }
+
+    .num-chip.hit {
+      background: rgba(255,213,74,0.15);
+      border-color: var(--gold);
+      color: var(--gold);
+      box-shadow: 0 0 14px var(--gold-glow);
+    }
+
+    .win-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .win-row:first-of-type { border-top: none; padding-top: 0; }
+
+    .win-row .medal { font-size: 1.2rem; }
+
+    .win-row .detail { flex: 1; }
+
+    .win-row .rank {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .win-row .prize {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--success);
+    }
+
+    .win-row .meta {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+    }
+
+    .encourage-list {
+      list-style: none;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .encourage-list li::before {
+      content: "→ ";
+      color: var(--cyan);
+      font-weight: 700;
+    }
+
+    .actions {
+      flex-shrink: 0;
+      width: 100%;
+      max-width: 320px;
+      padding: 0 20px;
+      padding-bottom: calc(16px + var(--safe-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+    }
+
+    .btn-primary.win {
+      background: linear-gradient(135deg, #d4a017, #ffd54a);
+      color: #3d3000;
+      box-shadow: 0 4px 16px var(--gold-glow);
+    }
+
+    .btn-secondary {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="confetti hidden" id="confetti"></div>
+
+    <div class="top-bar">
+      <div class="round-tag">Round #2847 · Your Result</div>
+    </div>
+
+    <!-- WIN -->
+    <div class="main hidden" id="winScreen">
+      <div class="hero-icon win">🏆</div>
+      <h1 class="win">Congratulations!</h1>
+      <p class="subtitle" id="winSubtitle">You hit a winning number this round. Your prize has been credited!</p>
+
+      <div class="card win-card">
+        <div class="card-label">Your Winning Pick(s)</div>
+        <div id="winList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Your Submitted Numbers</div>
+        <div class="your-nums" id="winNums"></div>
+      </div>
+    </div>
+
+    <!-- LOSE -->
+    <div class="main hidden" id="loseScreen">
+      <div class="hero-icon">💪</div>
+      <h1 class="lose">Better Luck Next Time!</h1>
+      <p class="subtitle" id="loseSubtitle">
+        None of your numbers matched this round. Don't give up — the next draw could be yours!
+      </p>
+
+      <div class="card">
+        <div class="card-label">Your Submitted Numbers</div>
+        <div class="your-nums" id="loseNums"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Keep Going</div>
+        <ul class="encourage-list">
+          <li>Every round is a fresh chance to win</li>
+          <li>Watch the live draw for hot number trends</li>
+          <li>Join the next round and try again!</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a class="btn btn-primary" id="primaryBtn" href="results.html">View Full Results</a>
+      <a class="btn btn-secondary" id="secondaryBtn" href="index.html?new=1">Play Next Round</a>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    const ME_ID = "me";
+    const app = document.getElementById("app");
+    const winScreen = document.getElementById("winScreen");
+    const loseScreen = document.getElementById("loseScreen");
+    const confettiEl = document.getElementById("confetti");
+    const primaryBtn = document.getElementById("primaryBtn");
+
+    function burstConfetti() {
+      confettiEl.classList.remove("hidden");
+      const colors = ["#ffd54a", "#00e5ff", "#00d68f", "#6c5ce7", "#ff4757"];
+      for (let i = 0; i < 60; i++) {
+        const s = document.createElement("span");
+        s.style.left = Math.random() * 100 + "%";
+        s.style.background = colors[i % colors.length];
+        s.style.animationDelay = Math.random() * 0.6 + "s";
+        confettiEl.appendChild(s);
+      }
+    }
+
+    function renderNumChips(container, numbers, winSet) {
+      container.innerHTML = numbers.length
+        ? numbers.map((n) =>
+            `<div class="num-chip${winSet.has(n) ? " hit" : ""}">${n}</div>`
+          ).join("")
+        : `<span style="color:var(--text-muted);font-size:0.8rem">No numbers submitted</span>`;
+    }
+
+    function renderWinList(wins) {
+      const el = document.getElementById("winList");
+      el.innerHTML = wins.map((w) => `
+        <div class="win-row">
+          <span class="medal">${w.medal || "🎖️"}</span>
+          <div class="detail">
+            <div class="rank">${w.rank} Place · #${w.number}</div>
+            <div class="prize">${w.bonus}</div>
+            <div class="meta">Share of prize pool: ${w.pct}</div>
+          </div>
+        </div>`).join("");
+    }
+
+    function showWin(outcome) {
+      app.classList.add("win-bg");
+      winScreen.classList.remove("hidden");
+      primaryBtn.classList.add("win");
+      primaryBtn.textContent = "Claim & View Results";
+
+      const winSet = new Set(outcome.wins.map((w) => w.number));
+      renderWinList(outcome.wins);
+      renderNumChips(document.getElementById("winNums"), outcome.numbers, winSet);
+
+      if (outcome.wins.length === 1) {
+        const w = outcome.wins[0];
+        document.getElementById("winSubtitle").textContent =
+          `Amazing! Your number ${w.number} won ${w.rank} place — ${w.bonus}!`;
+      } else {
+        document.getElementById("winSubtitle").textContent =
+          `Incredible! You matched ${outcome.wins.length} winning numbers this round!`;
+      }
+
+      burstConfetti();
+    }
+
+    function showLose(outcome) {
+      app.classList.add("lose-bg");
+      loseScreen.classList.remove("hidden");
+      primaryBtn.textContent = "View Full Results";
+
+      const emptyWin = new Set();
+      renderNumChips(document.getElementById("loseNums"), outcome.numbers, emptyWin);
+
+      if (!outcome.participated) {
+        document.getElementById("loseSubtitle").textContent =
+          "You didn't complete your entry this round. Join the next live game and pick your lucky numbers!";
+      }
+    }
+
+    function init() {
+      const preview = new URLSearchParams(location.search).get("preview");
+      let outcome = LuckyDraw.getPlayerOutcome(ME_ID);
+
+      if (preview === "win") {
+        outcome = {
+          won: true,
+          participated: true,
+          numbers: [3, 14, 40],
+          wins: [
+            LuckyDraw.PRIZE_TABLE.find((p) => p.number === 3),
+            LuckyDraw.PRIZE_TABLE.find((p) => p.number === 14),
+          ],
+        };
+      } else if (preview === "lose") {
+        outcome = {
+          won: false,
+          participated: true,
+          numbers: [1, 2, 40],
+          wins: [],
+        };
+      }
+
+      if (outcome.won) showWin(outcome);
+      else showLose(outcome);
+    }
+
+    init();
+  </script>
+</body>
+</html>
