@@ -526,34 +526,6 @@
       activeCell = null;
     }
 
-    function randomInt(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    /** Random hop across 1–50, slowing down, optionally bias toward target */
-    async function randomHop(durationMs, targetNum) {
-      const start = Date.now();
-      let delay = 40;
-      let last = 0;
-
-      while (Date.now() - start < durationMs) {
-        let next;
-        const elapsed = Date.now() - start;
-        const progress = elapsed / durationMs;
-
-        if (progress > 0.75 && targetNum) {
-          next = Math.random() < 0.35 + progress * 0.5 ? targetNum : randomInt(1, 50);
-        } else {
-          do { next = randomInt(1, 50); } while (next === last);
-        }
-
-        setActive(next);
-        last = next;
-        delay = 40 + progress * 120;
-        await sleep(delay);
-      }
-    }
-
     function lockNumbers(nums, winClass, rankTag) {
       nums.forEach((n) => {
         const c = cells[n];
@@ -620,49 +592,42 @@
       }
     }
 
-    async function revealWinner(w, index) {
-      const target = w.numbers[0];
-
+    async function revealWinner(w) {
       if (w.type === "single") {
-        statusText.textContent = `Drawing ${w.medal} ${w.rank} Place...`;
-        bottomNote.textContent = `Finding winner for ${w.rank} place...`;
-        await randomHop(1800 + index * 200, target);
-        setActive(target);
-        await sleep(350);
+        statusText.textContent = `Revealing ${w.medal} ${w.rank} Place...`;
+        bottomNote.textContent = `${w.rank} place · #${w.numbers[0]}`;
+        setActive(w.numbers[0]);
+        await sleep(450);
         lockNumbers(w.numbers, w.winClass, w.rankTag);
         clearActive();
         renderSingleCard(w);
       } else {
-        statusText.textContent = `Drawing ${w.rank}...`;
-        bottomNote.textContent = `Selecting ${w.numbers.length} winning numbers...`;
+        statusText.textContent = `Revealing ${w.rank}...`;
+        bottomNote.textContent = `Winning numbers: ${w.numbers.join(", ")}`;
         for (let i = 0; i < w.numbers.length; i++) {
-          await randomHop(1200 + i * 300, w.numbers[i]);
           setActive(w.numbers[i]);
-          await sleep(250);
+          await sleep(300);
           lockNumbers([w.numbers[i]], w.winClass, w.rankTag);
           clearActive();
-          if (i < w.numbers.length - 1) await sleep(200);
+          if (i < w.numbers.length - 1) await sleep(150);
         }
         renderGroupCard(w);
       }
 
-      await sleep(600);
+      await sleep(500);
     }
 
     async function runDraw() {
       const state = LuckyDraw.loadState();
 
-      statusText.textContent = "Scanning all 50 numbers...";
-      bottomNote.textContent = "Random selection in progress...";
+      statusText.textContent = "Revealing winners...";
+      bottomNote.textContent = "From lowest rank to grand prize";
 
-      await randomHop(2200, null);
-      clearActive();
-
-      statusText.textContent = "Winners incoming...";
       await sleep(400);
 
-      for (let i = 0; i < WINNERS.length; i++) {
-        await revealWinner(WINNERS[i], i);
+      const reversedWinners = [...WINNERS].reverse();
+      for (const w of reversedWinners) {
+        await revealWinner(w);
       }
 
       statusText.textContent = "Draw Complete!";
